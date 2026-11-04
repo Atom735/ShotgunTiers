@@ -1,0 +1,9 @@
+{
+  "name": "ShotgunTiers",
+  "version": "2.0.0",
+  "title": "ShotgunTiers",
+  "author": "Atom735",
+  "factorio_version": "2.0",
+  "dependencies": ["base >= 2.0.0", "? quality"],
+  "description": "Добавляет 10 тиров улучшения для оружия и боеприпасов: 5 предметов предыдущего тира крафтятся в 1 предмет следующего."
+}

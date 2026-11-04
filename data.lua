@@ -3,6 +3,8 @@ local range_step = settings.startup["shotguntiers-range-bonus"].value / 100
 local speed_step = settings.startup["shotguntiers-speed-bonus"].value / 100
 local ammo_damage_step = settings.startup["shotguntiers-ammo-damage-bonus"].value / 100
 
+local MAX_TIER = 5
+
 local gun_names = {
   "shotgun",
   "combat-shotgun",
@@ -23,8 +25,26 @@ local ammo_names = {
 local guns_raw = data.raw.gun
 local ammo_raw = data.raw.ammo
 local recipes_raw = data.raw.recipe
+local projectiles_raw = data.raw.projectile
 
-local function scale_ammo_damage(node, multiplier, visited)
+local created_projectiles = {}
+
+local function tier_item_name(base_name, tier)
+  return base_name .. "-t" .. tier
+end
+
+local function previous_item_name(base_name, tier)
+  if tier == 2 then
+    return base_name
+  end
+  return tier_item_name(base_name, tier - 1)
+end
+
+local function tier_order_suffix(tier)
+  return string.format("-t%02d", tier)
+end
+
+local function scale_damage_amounts(node, multiplier, visited)
   if type(node) ~= "table" then
     return
   end
@@ -42,7 +62,55 @@ local function scale_ammo_damage(node, multiplier, visited)
 
   for _, value in pairs(node) do
     if type(value) == "table" then
-      scale_ammo_damage(value, multiplier, visited)
+      scale_damage_amounts(value, multiplier, visited)
+    end
+  end
+end
+
+local function ensure_tier_projectile(base_projectile_name, tier, multiplier)
+  local new_name = tier_item_name(base_projectile_name, tier)
+  if created_projectiles[new_name] then
+    return new_name
+  end
+
+  local base = projectiles_raw[base_projectile_name]
+  if not base then
+    return base_projectile_name
+  end
+
+  local proto = table.deepcopy(base)
+  proto.name = new_name
+  proto.localised_name = proto.localised_name or { "entity-name." .. base_projectile_name }
+  scale_damage_amounts(proto.action, multiplier, {})
+  data:extend({ proto })
+  created_projectiles[new_name] = true
+  return new_name
+end
+
+-- Scales inline damage and retargets projectile deliveries to tiered clones.
+local function enhance_ammo_action(node, tier, multiplier, visited)
+  if type(node) ~= "table" then
+    return
+  end
+
+  visited = visited or {}
+  if visited[node] then
+    return
+  end
+  visited[node] = true
+
+  local damage = node.damage
+  if type(damage) == "table" and type(damage.amount) == "number" then
+    damage.amount = damage.amount * multiplier
+  end
+
+  if type(node.projectile) == "string" then
+    node.projectile = ensure_tier_projectile(node.projectile, tier, multiplier)
+  end
+
+  for _, value in pairs(node) do
+    if type(value) == "table" then
+      enhance_ammo_action(value, tier, multiplier, visited)
     end
   end
 end
@@ -72,18 +140,16 @@ local function build_tier_icons(base_proto, tier)
     return nil
   end
 
-  if tier < 10 then
+  if tier < MAX_TIER then
     icons[#icons + 1] = {
-      icon = "__core__/graphics/icons/mip/" .. tier .. ".png",
-      icon_size = 32,
-      scale = 0.5,
+      icon = "__base__/graphics/icons/signal/signal_" .. tier .. ".png",
+      scale = 0.25,
       shift = { -8, 8 },
     }
   else
     icons[#icons + 1] = {
-      icon = "__core__/graphics/story-elements/achievement-unlocked.png",
-      icon_size = 128,
-      scale = 0.2,
+      icon = "__base__/graphics/icons/signal/signal-star.png",
+      scale = 0.25,
       shift = { -8, 8 },
     }
   end
@@ -91,40 +157,22 @@ local function build_tier_icons(base_proto, tier)
   return icons
 end
 
-local function tier_item_name(base_name, tier)
-  return base_name .. "-t" .. tier
-end
-
-local function previous_item_name(base_name, tier)
-  if tier == 2 then
-    return base_name
-  end
-  return tier_item_name(base_name, tier - 1)
-end
-
-local function is_recipe_enabled(recipe)
-  if not recipe then
-    return true
-  end
-  if recipe.enabled == false then
-    return false
-  end
-  return true
-end
-
-local function make_tier_recipe(base_name, tier, result_type)
+local function make_tier_recipe(base_name, tier, base_item)
   local base_recipe = recipes_raw[base_name]
-  local recipe = {
+  return {
     type = "recipe",
     name = tier_item_name(base_name, tier),
     localised_name = { "item-name." .. tier_item_name(base_name, tier) },
-    category = base_recipe and base_recipe.category or nil,
-    subgroup = base_recipe and base_recipe.subgroup or nil,
-    order = (base_recipe and base_recipe.order or base_name) .. "-t" .. tier,
-    energy_required = base_recipe and base_recipe.energy_required or 0.5,
-    enabled = is_recipe_enabled(base_recipe),
+    categories = (base_recipe and base_recipe.categories) or { "crafting" },
+    subgroup = (base_item and base_item.subgroup) or (base_recipe and base_recipe.subgroup) or nil,
+    order = ((base_item and base_item.order) or (base_recipe and base_recipe.order) or base_name)
+      .. tier_order_suffix(tier),
+    energy_required = 0.01,
+    enabled = true,
+    unlock_results = true,
     apply_recipe_coefficients = false,
     allow_as_intermediate = false,
+    allow_decomposition = false,
     ingredients = {
       { type = "item", name = previous_item_name(base_name, tier), amount = 5 },
     },
@@ -132,12 +180,6 @@ local function make_tier_recipe(base_name, tier, result_type)
       { type = "item", name = tier_item_name(base_name, tier), amount = 1 },
     },
   }
-
-  if result_type == "gun" or result_type == "ammo" then
-    recipe.allow_decomposition = false
-  end
-
-  return recipe
 end
 
 local function create_gun_tiers(base_name)
@@ -146,11 +188,11 @@ local function create_gun_tiers(base_name)
     return
   end
 
-  for tier = 2, 10 do
+  for tier = 2, MAX_TIER do
     local modifier = tier - 1
     local proto = table.deepcopy(base)
     proto.name = tier_item_name(base_name, tier)
-    proto.order = (base.order or base_name) .. "-t" .. tier
+    proto.order = (base.order or base_name) .. tier_order_suffix(tier)
     proto.localised_name = { "item-name." .. proto.name }
 
     local attack = proto.attack_parameters
@@ -174,7 +216,7 @@ local function create_gun_tiers(base_name)
     clear_icon_keys(proto)
     proto.icons = build_tier_icons(base, tier)
 
-    data:extend({ proto, make_tier_recipe(base_name, tier, "gun") })
+    data:extend({ proto, make_tier_recipe(base_name, tier, base) })
   end
 end
 
@@ -184,22 +226,22 @@ local function create_ammo_tiers(base_name)
     return
   end
 
-  for tier = 2, 10 do
+  for tier = 2, MAX_TIER do
     local modifier = tier - 1
     local proto = table.deepcopy(base)
     proto.name = tier_item_name(base_name, tier)
-    proto.order = (base.order or base_name) .. "-t" .. tier
+    proto.order = (base.order or base_name) .. tier_order_suffix(tier)
     proto.localised_name = { "item-name." .. proto.name }
 
     local damage_mult = (1 + ammo_damage_step) ^ modifier
     if proto.ammo_type then
-      scale_ammo_damage(proto.ammo_type.action, damage_mult, {})
+      enhance_ammo_action(proto.ammo_type.action, tier, damage_mult, {})
     end
 
     clear_icon_keys(proto)
     proto.icons = build_tier_icons(base, tier)
 
-    data:extend({ proto, make_tier_recipe(base_name, tier, "ammo") })
+    data:extend({ proto, make_tier_recipe(base_name, tier, base) })
   end
 end
 

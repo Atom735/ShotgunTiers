@@ -1,0 +1,19 @@
+---------------------------------------------------------------------------------------------------
+Version: 2.1.0
+Date: 2026-11-05
+  Features:
+    - Renamed to Atmos Shotgun Tiers.
+    - Five upgrade tiers for selected guns and ammo (5 previous → 1 next).
+    - Startup settings for weapon damage, range, attack speed, and ammo damage bonuses.
+    - Tier recipes enabled from the start with 0.01s craft time.
+    - Projectile-based ammo (shotgun shells, rockets) gets tiered projectiles with scaled damage.
+  Compatibility:
+    - Factorio 2.1 / Space Age (optional quality).
+    - Recipe categories use Factorio 2.1 `categories` field.
+  Locale:
+    - Russian and English.
+---------------------------------------------------------------------------------------------------
+Version: 2.0.0
+Date: 2026-11-05
+  Features:
+    - Initial release prototype with multi-tier guns and ammo.

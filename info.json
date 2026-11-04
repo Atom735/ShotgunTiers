@@ -1,9 +1,12 @@
 {
-  "name": "ShotgunTiers",
-  "version": "2.0.0",
-  "title": "ShotgunTiers",
+  "name": "Atmos-Shotgun-Tiers",
+  "version": "2.1.0",
+  "title": "Atmos Shotgun Tiers",
   "author": "Atom735",
+  "contact": "",
+  "homepage": "https://github.com/Atom735/ShotgunTiers",
+  "description": "Adds 5 upgrade tiers for guns and ammo: craft 5 of the previous tier into 1 of the next. Recipes available from the start. Configurable damage, range, and attack-speed bonuses.",
   "factorio_version": "2.1",
   "dependencies": ["base >= 2.1.0", "? quality"],
-  "description": "Добавляет 10 тиров улучшения для оружия и боеприпасов: 5 предметов предыдущего тира крафтятся в 1 предмет следующего."
+  "license": "MIT"
 }

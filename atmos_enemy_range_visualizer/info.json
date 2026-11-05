@@ -1,0 +1,12 @@
+{
+  "name": "Atmos-Enemy-Range-Visualizer",
+  "version": "1.0.1",
+  "title": "Atmos Enemy Range Visualizer",
+  "author": "Atom735",
+  "contact": "",
+  "homepage": "https://github.com/Atom735/atmos_factorio_mods/tree/main/atmos_enemy_range_visualizer",
+  "description": "Shows attack range circles around enemy worms, turrets, and artillery. Per-type colors, filled/outline styles, shortcut and in-game panel. Recommended companion: Gun Range Visualizer.",
+  "factorio_version": "2.1",
+  "dependencies": ["base >= 2.1.0", "+ gun-range-visualizer"],
+  "license": "MIT"
+}

@@ -31,4 +31,12 @@ data:extend({
     minimum_value = 0,
     maximum_value = 500,
   },
+  {
+    type = "int-setting",
+    name = "shotguntiers-pellet-bonus",
+    setting_type = "startup",
+    default_value = 1,
+    minimum_value = 0,
+    maximum_value = 20,
+  },
 })

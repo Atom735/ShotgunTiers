@@ -1,0 +1,108 @@
+name: Publish Factorio mods
+
+on:
+  workflow_dispatch:
+    inputs:
+      mod:
+        description: "Mod folder (e.g. atmos_shotgun_tiers) or 'all'"
+        required: true
+        default: all
+      dry_run:
+        description: "Pack only; do not upload to Mod Portal"
+        type: boolean
+        default: false
+      category:
+        description: "Portal category used only on first publish"
+        required: true
+        default: combat
+  push:
+    tags:
+      # Monorepo tag: atmos_shotgun_tiers/2.1.1
+      - "*/*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements-publish.txt
+
+      - name: Resolve targets
+        id: targets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            FOLDER="${TAG%%/*}"
+            VERSION="${TAG#*/}"
+            if [[ -z "${FOLDER}" || -z "${VERSION}" || "${FOLDER}" == "${TAG}" ]]; then
+              echo "::error::Tag must look like '<mod_folder>/<version>' (got '${TAG}')"
+              exit 1
+            fi
+            if [[ ! -f "${FOLDER}/info.json" ]]; then
+              echo "::error::No info.json for folder '${FOLDER}' from tag '${TAG}'"
+              exit 1
+            fi
+            echo "mode=tag" >> "$GITHUB_OUTPUT"
+            echo "mod=${FOLDER}" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+            echo "category=combat" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=dispatch" >> "$GITHUB_OUTPUT"
+            echo "mod=${{ inputs.mod }}" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "dry_run=${{ inputs.dry_run }}" >> "$GITHUB_OUTPUT"
+            echo "category=${{ inputs.category }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish
+        env:
+          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${FACTORIO_API_KEY}" && "${{ steps.targets.outputs.dry_run }}" != "true" ]]; then
+            echo "::error::Repository secret FACTORIO_API_KEY is missing."
+            exit 1
+          fi
+
+          ARGS=(--category "${{ steps.targets.outputs.category }}")
+          if [[ "${{ steps.targets.outputs.dry_run }}" == "true" ]]; then
+            ARGS+=(--dry-run)
+          fi
+
+          MOD="${{ steps.targets.outputs.mod }}"
+          VERSION="${{ steps.targets.outputs.version }}"
+
+          if [[ -n "${VERSION}" ]]; then
+            ARGS+=(--expect-version "${VERSION}")
+          fi
+
+          if [[ "${MOD}" == "all" ]]; then
+            python scripts/publish-mod.py --all "${ARGS[@]}"
+          else
+            python scripts/publish-mod.py "${MOD}" "${ARGS[@]}"
+          fi
+
+      - name: Upload zip artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factorio-mod-zips
+          path: dist/*.zip
+          if-no-files-found: ignore

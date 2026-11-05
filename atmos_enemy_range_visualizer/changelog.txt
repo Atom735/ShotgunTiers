@@ -1,0 +1,20 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2026-11-05
+  Optimizations:
+    - Cache colors, styles, entity types, enemy forces, and prototype ranges.
+    - Skip full rescans when the player barely moved; only create/destroy changed overlays.
+    - Tick handler stays inactive while visualization is off.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2026-11-05
+  Features:
+    - Show attack range circles for enemy worms, ammo/electric/fluid turrets, and artillery.
+    - Per-type colors and three styles: filled, outline, filled + outline.
+    - Shortcut bar toggle and keybind (CONTROL + SHIFT + R).
+    - In-game settings panel (CONTROL + SHIFT + E) for enable, style, and category filters.
+  Compatibility:
+    - Factorio 2.1.
+    - Recommends gun-range-visualizer as a companion mod.
+  Locale:
+    - English and Russian.

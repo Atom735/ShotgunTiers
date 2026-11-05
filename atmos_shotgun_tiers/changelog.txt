@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.1
+Date: 2026-11-05
+  Features:
+    - Shotgun and piercing shotgun shells gain extra pellets each tier (configurable integer, default +1 per tier step).
+  Changes:
+    - New startup setting: Extra shotgun pellets per tier.
+---------------------------------------------------------------------------------------------------
 Version: 2.1.0
 Date: 2026-11-05
   Features:

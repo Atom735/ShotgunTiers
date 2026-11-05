@@ -1,0 +1,27 @@
+---
+description: Factorio mod file and changelog conventions in this repo
+globs: "**/info.json,**/data*.lua,**/settings*.lua,**/control.lua,**/changelog*.txt,**/locale/**/*.cfg,**/README*.md,**/migrations/**"
+alwaysApply: false
+---
+
+# Factorio mod files
+
+## Required / expected
+
+- `info.json`: `name`, `version` (`X.Y.Z`), `title`, `author`, `factorio_version` (`"2.1"`), `description`, `dependencies`
+- `changelog.txt`: official Factorio changelog format (99 dashes, `Version:`, optional `Date:`, categories, `    - ` entries)
+- `locale/en/*.cfg` and `locale/ru/*.cfg` for player-facing strings
+- `README.md` (EN) + `README_RU.md` when documenting a mod
+- Optional: `changelog_RU.txt` mirroring EN changelog in Russian (repo/docs only; game reads `changelog.txt`)
+
+## Do not
+
+- Use recipe `category` / `additional_categories` — Factorio 2.1 requires `categories = { "..." }`
+- Put tabs or trailing spaces in `changelog.txt`
+- Ship secrets, `.cursor/`, or pack-only junk inside portal zips
+
+## Packaging / portal
+
+- Build zips: `scripts/pack-mod.ps1` or `scripts/pack-mod.py`
+- Publish/update: `scripts/publish-mod.py` or workflow `.github/workflows/publish-mods.yml`
+- See skill `factorio-mod-packaging`

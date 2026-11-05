@@ -2,6 +2,7 @@ local damage_step = settings.startup["shotguntiers-damage-bonus"].value / 100
 local range_step = settings.startup["shotguntiers-range-bonus"].value / 100
 local speed_step = settings.startup["shotguntiers-speed-bonus"].value / 100
 local ammo_damage_step = settings.startup["shotguntiers-ammo-damage-bonus"].value / 100
+local pellet_step = math.floor(settings.startup["shotguntiers-pellet-bonus"].value + 0.5)
 
 local MAX_TIER = 5
 
@@ -20,6 +21,11 @@ local ammo_names = {
   "shotgun-shell",
   "piercing-shotgun-shell",
   "rocket",
+}
+
+local shotgun_ammo = {
+  ["shotgun-shell"] = true,
+  ["piercing-shotgun-shell"] = true,
 }
 
 local guns_raw = data.raw.gun
@@ -49,7 +55,6 @@ local function scale_damage_amounts(node, multiplier, visited)
     return
   end
 
-  visited = visited or {}
   if visited[node] then
     return
   end
@@ -87,13 +92,12 @@ local function ensure_tier_projectile(base_projectile_name, tier, multiplier)
   return new_name
 end
 
--- Scales inline damage and retargets projectile deliveries to tiered clones.
-local function enhance_ammo_action(node, tier, multiplier, visited)
+-- Scales inline damage, retargets projectiles, and (for shotguns) raises pellet count.
+local function enhance_ammo_action(node, tier, multiplier, pellet_extra, visited)
   if type(node) ~= "table" then
     return
   end
 
-  visited = visited or {}
   if visited[node] then
     return
   end
@@ -104,13 +108,17 @@ local function enhance_ammo_action(node, tier, multiplier, visited)
     damage.amount = damage.amount * multiplier
   end
 
+  if pellet_extra > 0 and type(node.repeat_count) == "number" then
+    node.repeat_count = node.repeat_count + pellet_extra
+  end
+
   if type(node.projectile) == "string" then
     node.projectile = ensure_tier_projectile(node.projectile, tier, multiplier)
   end
 
   for _, value in pairs(node) do
     if type(value) == "table" then
-      enhance_ammo_action(value, tier, multiplier, visited)
+      enhance_ammo_action(value, tier, multiplier, pellet_extra, visited)
     end
   end
 end
@@ -226,6 +234,8 @@ local function create_ammo_tiers(base_name)
     return
   end
 
+  local is_shotgun = shotgun_ammo[base_name] == true
+
   for tier = 2, MAX_TIER do
     local modifier = tier - 1
     local proto = table.deepcopy(base)
@@ -234,8 +244,13 @@ local function create_ammo_tiers(base_name)
     proto.localised_name = { "item-name." .. proto.name }
 
     local damage_mult = (1 + ammo_damage_step) ^ modifier
+    local pellet_extra = 0
+    if is_shotgun and pellet_step > 0 then
+      pellet_extra = pellet_step * modifier
+    end
+
     if proto.ammo_type then
-      enhance_ammo_action(proto.ammo_type.action, tier, damage_mult, {})
+      enhance_ammo_action(proto.ammo_type.action, tier, damage_mult, pellet_extra, {})
     end
 
     clear_icon_keys(proto)

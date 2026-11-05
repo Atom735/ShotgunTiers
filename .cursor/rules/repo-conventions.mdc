@@ -1,0 +1,34 @@
+---
+description: Core conventions for this Factorio mods monorepo (language, locales, docs)
+alwaysApply: true
+---
+
+# atmos_factorio_mods
+
+Monorepo for Factorio mod development (target: Factorio **2.1**).
+
+## Language
+
+- Default language for code, comments, commits, `info.json`, `README.md`, and `changelog.txt` is **English**.
+- Russian docs use the `_RU` suffix:
+  - `README_RU.md`
+  - `changelog_RU.txt`
+- Keep EN and `_RU` docs in sync when behavior or version notes change.
+- Chat with the user may be in Russian; authored project files stay EN unless `_RU`.
+
+## Locales
+
+- Primary in-game locales: `locale/en/` and `locale/ru/`.
+- Mirror keys across both; do not leave RU keys missing for player-facing strings.
+- Prefer locale keys over hard-coded `localised_*` English strings when text is shown to players.
+
+## Layout
+
+- One mod per top-level folder (e.g. `atmos_shotgun_tiers/`).
+- Folder name may differ from portal `info.json` `name`; never rename `name` if it would break saves or the portal page.
+- Packaging scripts live in `scripts/`. Agent workflows live in `.cursor/skills/`.
+
+## When editing mods
+
+- Follow the `factorio-2.1-modding` skill for prototypes, data lifecycle, and 2.1 API changes.
+- Follow the `factorio-mod-packaging` skill when building portal zip releases.

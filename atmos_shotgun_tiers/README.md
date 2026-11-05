@@ -16,10 +16,11 @@ Craft **5 items of the previous tier into 1 item of the next tier**. Tier recipe
 - Weapon range bonus per tier
 - Weapon attack speed bonus per tier
 - Ammo damage bonus per tier
+- Extra shotgun pellets per tier (integer; default +1 per tier step)
 
 ## Install
 
-Copy `Atmos-Shotgun-Tiers_2.1.0.zip` into your Factorio `mods` folder, or download from the [Mod Portal](https://mods.factorio.com) after publish.
+Copy `Atmos-Shotgun-Tiers_2.1.1.zip` into your Factorio `mods` folder, or download from the [Mod Portal](https://mods.factorio.com) after publish.
 
 ## License
 

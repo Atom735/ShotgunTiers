@@ -1,26 +1,9 @@
-# Atmos Shotgun Tiers
+# atmos_factorio_mods
 
-Factorio 2.1 mod that adds **5 upgrade tiers** for selected guns and ammo.
+Моды для Factorio.
 
-Craft **5 items of the previous tier into 1 item of the next tier**. Tier recipes are available from the start.
+| Мод | Папка |
+| --- | --- |
+| Atmos Shotgun Tiers | [atmos_shotgun_tiers](atmos_shotgun_tiers) |
 
-## Covered items
-
-**Guns:** shotgun, combat shotgun, pistol, submachine gun, rocket launcher  
-
-**Ammo:** firearm magazine, piercing rounds, uranium rounds, shotgun shells, piercing shotgun shells, rockets
-
-## Settings (startup)
-
-- Weapon damage bonus per tier
-- Weapon range bonus per tier
-- Weapon attack speed bonus per tier
-- Ammo damage bonus per tier
-
-## Install
-
-Copy `Atmos-Shotgun-Tiers_2.1.0.zip` into your Factorio `mods` folder, or download from the [Mod Portal](https://mods.factorio.com) after publish.
-
-## License
-
-MIT
+Имя мода в игре остаётся `Atmos-Shotgun-Tiers` (см. `info.json`), чтобы не сменить сохранение и страницу на портале.

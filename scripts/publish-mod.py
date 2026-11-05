@@ -27,16 +27,17 @@ INIT_PUBLISH = f"{PORTAL}/api/v2/mods/init_publish"
 INIT_UPLOAD = f"{PORTAL}/api/v2/mods/releases/init_upload"
 
 # Portal license / category enums (see Mod details API).
-DEFAULT_CATEGORY = "combat"
+# Categories: no-category, content, overhaul, tweaks, utilities, scenarios,
+# mod-packs, localizations, internal.
+DEFAULT_CATEGORY = "utilities"
 LICENSE_MAP = {
-    "mit": "mit",
-    "MIT": "mit",
-    "gplv3": "gnu_gpLv3",
-    "gpl-3.0": "gnu_gpLv3",
-    "apache-2.0": "apache",
-    "cc0": "cc0",
-    "proprietary": "proprietary",
-    "default": "default",
+    "mit": "default_mit",
+    "MIT": "default_mit",
+    "gplv3": "default_gnugplv3",
+    "gpl-3.0": "default_gnugplv3",
+    "apache-2.0": "default_apache2",
+    "unlicense": "default_unlicense",
+    "default": "default_mit",
 }
 
 
@@ -84,8 +85,9 @@ def read_description(mod_path: Path) -> str:
 
 def map_license(raw: str | None) -> str:
     if not raw:
-        return "mit"
-    return LICENSE_MAP.get(raw, LICENSE_MAP.get(raw.lower(), "default"))
+        return "default_mit"
+    mapped = LICENSE_MAP.get(raw) or LICENSE_MAP.get(str(raw).lower())
+    return mapped or "default_mit"
 
 
 def upload_zip(
@@ -235,14 +237,27 @@ def main(argv: list[str] | None = None) -> int:
         mods = iter_mod_dirs(repo_root)
         if not mods:
             raise SystemExit(f"No mod folders with info.json under {repo_root}")
+        failures: list[str] = []
         for mod in mods:
-            publish_mod_dir(
-                mod,
-                out_dir=out_dir,
-                dry_run=args.dry_run,
-                category=args.category,
-                expected_version=args.expect_version,
-            )
+            try:
+                publish_mod_dir(
+                    mod,
+                    out_dir=out_dir,
+                    dry_run=args.dry_run,
+                    category=args.category,
+                    expected_version=args.expect_version,
+                )
+            except SystemExit as exc:
+                failures.append(f"{mod.name}: {exc}")
+                print(f"ERROR {mod.name}: {exc}", file=sys.stderr)
+            except Exception as exc:  # noqa: BLE001 - keep publishing remaining mods
+                failures.append(f"{mod.name}: {exc}")
+                print(f"ERROR {mod.name}: {exc}", file=sys.stderr)
+        if failures:
+            print("Publish finished with errors:", file=sys.stderr)
+            for item in failures:
+                print(f"  - {item}", file=sys.stderr)
+            return 1
         return 0
 
     if not args.mod_dir:

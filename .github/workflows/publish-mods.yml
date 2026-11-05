@@ -12,9 +12,9 @@ on:
         type: boolean
         default: false
       category:
-        description: "Portal category used only on first publish"
+        description: "Portal category used only on first publish (content/tweaks/utilities/...)"
         required: true
-        default: combat
+        default: utilities
   push:
     tags:
       # Monorepo tag: atmos_shotgun_tiers/2.1.1
@@ -60,7 +60,7 @@ jobs:
             echo "mod=${FOLDER}" >> "$GITHUB_OUTPUT"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "dry_run=false" >> "$GITHUB_OUTPUT"
-            echo "category=combat" >> "$GITHUB_OUTPUT"
+            echo "category=utilities" >> "$GITHUB_OUTPUT"
           else
             echo "mode=dispatch" >> "$GITHUB_OUTPUT"
             echo "mod=${{ inputs.mod }}" >> "$GITHUB_OUTPUT"

@@ -24,6 +24,28 @@ data:extend({
   },
   {
     type = "bool-setting",
+    name = "atmos-enemy-range-show-lines",
+    setting_type = "runtime-per-user",
+    default_value = false,
+  },
+  {
+    type = "double-setting",
+    name = "atmos-enemy-range-line-alpha",
+    setting_type = "runtime-per-user",
+    default_value = 0.8,
+    minimum_value = 0.05,
+    maximum_value = 1,
+  },
+  {
+    type = "int-setting",
+    name = "atmos-enemy-range-line-width",
+    setting_type = "runtime-per-user",
+    default_value = 2,
+    minimum_value = 1,
+    maximum_value = 8,
+  },
+  {
+    type = "bool-setting",
     name = "atmos-enemy-range-show-worms",
     setting_type = "runtime-per-user",
     default_value = true,

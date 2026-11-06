@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.3
+Date: 2026-11-06
+  Features:
+    - Optional lines from the character to enemy turrets and worms, in the category color.
+    - New per-player settings: show lines, line opacity, line width. Panel checkbox toggles lines per session.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2026-11-06
+  Bugfixes:
+    - Fixed crash "LuaEntityPrototype doesn't contain key automatic_range" near enemy artillery turrets.
+    - Artillery range is now read from the turret's gun; prototype reads can no longer crash the game.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2026-11-05
   Optimizations:

@@ -66,16 +66,30 @@ local function player_state(player_index)
   return state
 end
 
+local function destroy_entry(entry)
+  if entry.fill and entry.fill.valid then
+    entry.fill.destroy()
+  end
+  if entry.outline and entry.outline.valid then
+    entry.outline.destroy()
+  end
+  if entry.line and entry.line.valid then
+    entry.line.destroy()
+  end
+end
+
 local function clear_overlays(state)
   for _, entry in pairs(state.overlays) do
-    if entry.fill and entry.fill.valid then
-      entry.fill.destroy()
-    end
-    if entry.outline and entry.outline.valid then
-      entry.outline.destroy()
-    end
+    destroy_entry(entry)
   end
   state.overlays = {}
+end
+
+local function get_show_lines(player, state)
+  if state.show_lines == nil then
+    state.show_lines = player.mod_settings["atmos-enemy-range-show-lines"].value
+  end
+  return state.show_lines
 end
 
 local function ensure_category_overrides(player, state)
@@ -105,8 +119,12 @@ local function rebuild_render_cache(player, state)
   local style = state.style or settings["atmos-enemy-range-style"].value
   local want_fill, want_outline = style_flags(style)
   local colors = {}
+  local line_colors = {}
+  local line_alpha = settings["atmos-enemy-range-line-alpha"].value
   for category, setting_name in pairs(COLOR_SETTING) do
-    colors[category] = util.premul_color(settings[setting_name].value)
+    local raw = settings[setting_name].value
+    colors[category] = util.premul_color(raw)
+    line_colors[category] = util.premul_color({ r = raw.r, g = raw.g, b = raw.b, a = line_alpha })
   end
   local outline_colors = {}
   for category, color in pairs(colors) do
@@ -135,6 +153,9 @@ local function rebuild_render_cache(player, state)
     radius = settings["atmos-enemy-range-search-radius"].value,
     colors = colors,
     outline_colors = outline_colors,
+    show_lines = get_show_lines(player, state),
+    line_colors = line_colors,
+    line_width = settings["atmos-enemy-range-line-width"].value,
     types = types,
   }
 end
@@ -144,6 +165,31 @@ local function get_render_cache(player, state)
     rebuild_render_cache(player, state)
   end
   return state.render_cache
+end
+
+-- Reading a key the prototype type does not have raises an error, so callers wrap this in pcall.
+local function read_prototype_range(proto)
+  local attack = proto.attack_parameters
+  if attack and type(attack.range) == "number" and attack.range > 0 then
+    return attack.range
+  end
+
+  -- Artillery turrets keep their range on the gun prototype (automatic range).
+  local guns = proto.indexed_guns
+  if guns then
+    local best = 0
+    for _, gun in pairs(guns) do
+      local params = gun.attack_parameters
+      if params and type(params.range) == "number" and params.range > best then
+        best = params.range
+      end
+    end
+    if best > 0 then
+      return best
+    end
+  end
+
+  return proto.turret_range or 0
 end
 
 local function get_attack_range(entity)
@@ -156,19 +202,9 @@ local function get_attack_range(entity)
   local proto = entity.prototype
   local range = 0
   if proto then
-    if entity.type == "artillery-turret" then
-      local automatic = proto.automatic_range
-      if type(automatic) == "number" then
-        range = automatic
-      end
-    end
-    if range <= 0 then
-      local attack = proto.attack_parameters
-      if attack and type(attack.range) == "number" then
-        range = attack.range
-      else
-        range = proto.turret_range or 0
-      end
+    local ok, result = pcall(read_prototype_range, proto)
+    if ok and type(result) == "number" then
+      range = result
     end
   end
 
@@ -193,13 +229,22 @@ local function enemy_forces_for(player, state)
   return result
 end
 
-local function destroy_entry(entry)
-  if entry.fill and entry.fill.valid then
-    entry.fill.destroy()
+-- Lines follow both ends automatically and die with the character, so they are recreated on demand.
+local function ensure_line(player, entry, entity, character, cache)
+  if not cache.show_lines or not character then
+    return
   end
-  if entry.outline and entry.outline.valid then
-    entry.outline.destroy()
+  if entry.line and entry.line.valid then
+    return
   end
+  entry.line = rendering.draw_line({
+    color = cache.line_colors[entry.category],
+    width = cache.line_width,
+    from = character,
+    to = entity,
+    surface = entity.surface,
+    players = { player.index },
+  })
 end
 
 local function create_overlays(player, entity, category, cache)
@@ -208,7 +253,7 @@ local function create_overlays(player, entity, category, cache)
     return nil
   end
 
-  local entry = { category = category, range = range }
+  local entry = { category = category, range = range, entity = entity }
   local surface = entity.surface
   local players = { player.index }
 
@@ -253,6 +298,8 @@ local function refresh_player(player, force_rescan)
   if character and character.valid then
     position = character.position
     surface = character.surface
+  else
+    character = nil
   end
 
   local cache = get_render_cache(player, state)
@@ -280,9 +327,12 @@ local function refresh_player(player, force_rescan)
       for unit, entry in pairs(state.overlays) do
         local fill_ok = (not entry.fill) or entry.fill.valid
         local outline_ok = (not entry.outline) or entry.outline.valid
-        if not (fill_ok and outline_ok) then
+        local entity_ok = entry.entity and entry.entity.valid
+        if not (fill_ok and outline_ok and entity_ok) then
           destroy_entry(entry)
           state.overlays[unit] = nil
+        else
+          ensure_line(player, entry, entry.entity, character, cache)
         end
       end
       return
@@ -315,6 +365,9 @@ local function refresh_player(player, force_rescan)
           if entry then
             overlays[unit] = entry
           end
+        end
+        if entry then
+          ensure_line(player, entry, entity, character, cache)
         end
       end
     end
@@ -447,6 +500,14 @@ local function build_panel(player)
   style_box.selected_index = selected
   style_box.tags = { aerv = "style" }
 
+  frame.add({
+    type = "checkbox",
+    caption = { "atmos-enemy-range.show-lines" },
+    tooltip = { "atmos-enemy-range.show-lines-tooltip" },
+    state = get_show_lines(player, state),
+    tags = { aerv = "lines" },
+  })
+
   frame.add({ type = "line" })
   frame.add({
     type = "label",
@@ -577,6 +638,9 @@ script.on_event(defines.events.on_gui_checked_state_changed, function(event)
     ensure_category_overrides(player, state)
     state.categories[element.tags.category] = element.state
     restyle_player(player)
+  elseif element.tags.aerv == "lines" then
+    state.show_lines = element.state
+    restyle_player(player)
   end
 end)
 
@@ -627,6 +691,8 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   local state = player_state(player.index)
   if event.setting == "atmos-enemy-range-style" then
     state.style = player.mod_settings["atmos-enemy-range-style"].value
+  elseif event.setting == "atmos-enemy-range-show-lines" then
+    state.show_lines = player.mod_settings["atmos-enemy-range-show-lines"].value
   else
     for category, setting_name in pairs(SHOW_SETTING) do
       if event.setting == setting_name then
@@ -676,6 +742,17 @@ script.on_event(defines.events.on_player_joined_game, function(event)
   if state.enabled then
     refresh_player(player, true)
     sync_tick_handler()
+  end
+end)
+
+script.on_event(defines.events.on_player_respawned, function(event)
+  local player = game.get_player(event.player_index)
+  if not player then
+    return
+  end
+  local state = player_state(player.index)
+  if state.enabled then
+    refresh_player(player, true)
   end
 end)
 

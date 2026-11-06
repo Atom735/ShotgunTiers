@@ -1,0 +1,12 @@
+{
+  "name": "Atmos-Auto-Heal",
+  "version": "1.0.0",
+  "title": "Atmos Auto Heal",
+  "author": "Atom735",
+  "contact": "",
+  "homepage": "https://github.com/Atom735/atmos_factorio_mods/tree/main/atmos_auto_heal",
+  "description": "Automatically eats fish, healing capsules, or any other self-healing item from your inventory when health drops below a threshold. Per-player priority list. Incompatible with Auto Fish and Heal (auto-fish).",
+  "factorio_version": "2.1",
+  "dependencies": ["base >= 2.1.0", "! auto-fish"],
+  "license": "MIT"
+}

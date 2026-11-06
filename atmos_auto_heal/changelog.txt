@@ -1,0 +1,13 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2026-11-06
+  Features:
+    - Automatically uses fish, healing capsules, and any modded self-healing capsule when health drops below a threshold.
+    - Per-player priority list with up/down ordering and per-item allow toggles.
+    - Shortcut bar toggle (CONTROL + SHIFT + H) and priority panel (CONTROL + SHIFT + J).
+    - Respects each item's use cooldown and can avoid wasting large heals.
+  Compatibility:
+    - Factorio 2.1.
+    - Incompatible with Auto Fish and Heal (auto-fish).
+  Locale:
+    - English and Russian.

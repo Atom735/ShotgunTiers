@@ -6,6 +6,7 @@
 | --- | --- |
 | Atmos Shotgun Tiers | [atmos_shotgun_tiers](atmos_shotgun_tiers) |
 | Atmos Enemy Range Visualizer | [atmos_enemy_range_visualizer](atmos_enemy_range_visualizer) |
+| Atmos Auto Heal | [atmos_auto_heal](atmos_auto_heal) |
 | Atmos Auto Fire | [atmos_auto_fire](atmos_auto_fire) |
 
 Имя мода в игре / на портале задаётся в `info.json` каждого мода (после публикации не переименовывать).

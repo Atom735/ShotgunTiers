@@ -1,0 +1,51 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.3.0
+Date: 2026-11-06
+  Features:
+    - Settings checkbox for a debug overlay: weapon and rule ranges, enemy candidates with their allow row, shot cones, and own buildings that block the line of fire.
+---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+Date: 2026-11-06
+  Changes:
+    - The character now fires the held shotgun itself; the hidden turret and proxy shells are removed.
+    - Spread, range, cooldown, ammo use, and research bonuses are the native ones of the held gun.
+---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 2026-11-06
+  Bugfixes:
+    - Pellet spread now matches the held shotgun: one hidden turret per shotgun with its range and damage modifier.
+    - Prototypes are built in data-final-fixes so tiered guns and shells from other mods are supported.
+    - Shotgun shell damage research now applies to auto-fire shots.
+---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 2026-11-06
+  Bugfixes:
+    - Hidden turret now fires from a short standoff so shotgun pellets do not spawn inside the player.
+    - Proxy shotgun ammo damages enemies only, with a safety heal for same-force / friendly hits.
+    - Clears the turret-out-of-ammo alert raised by the temporary one-round magazine.
+---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2026-11-06
+  Features:
+    - Allow list with per-row target filter: all enemies, entity type, or a specific entity.
+    - Each allow row has a range slider in meters or percent of the held weapon range.
+    - Forbid list of entities that are never targeted and that block the line of fire.
+  Changes:
+    - Default allow order: all at 10%, spawners, combat robots, worms, spitters, biters, then all at 100%.
+    - Default forbid list: gun turret, laser turret, flamethrower turret.
+    - Avoid-own-buildings line-of-fire toggle stays on by default.
+  Gui:
+    - Settings window rebuilt for allow/forbid lists, entity pickers, and m/% switches.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2026-11-06
+  Features:
+    - Automatic shotgun fire through a hidden turret that stays under the player.
+    - Shots spend ammo from the equipped gun slot and then lock the weapon cooldown.
+    - Target order: panic enemies, behemoth worms, other worms, spawners, then other units.
+    - Optional cone check so a shot is skipped when a friendly structure is in the spread.
+  Gui:
+    - Top-bar button opens the settings window for panic radius and priority order.
+    - Shortcut bar button toggles auto-fire and shows a flying status message.
+  Locale:
+    - English and Russian.

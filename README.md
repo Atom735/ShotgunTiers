@@ -6,6 +6,7 @@ Monorepo for Factorio **2.1** mods.
 | --- | --- |
 | Atmos Shotgun Tiers | [atmos_shotgun_tiers](atmos_shotgun_tiers) |
 | Atmos Enemy Range Visualizer | [atmos_enemy_range_visualizer](atmos_enemy_range_visualizer) |
+| Atmos Auto Fire | [atmos_auto_fire](atmos_auto_fire) |
 
 The in-game / portal mod id stays as in each mod's `info.json` (do not rename after publish).
 
